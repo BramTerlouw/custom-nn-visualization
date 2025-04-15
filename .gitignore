@@ -1,0 +1,50 @@
+# General
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+.env
+*.env
+
+# Go Backend
+/backend/bin/
+/backend/*.exe
+/backend/*.dll
+/backend/*.so
+/backend/tmp/
+/backend/vendor/
+/backend/*.prof
+/backend/*.test
+
+# Frontend
+/frontend/node_modules/
+/frontend/dist/
+/frontend/build/
+/frontend/public/build/
+/frontend/coverage/
+/frontend/*.log
+/frontend/.cache/
+
+# Podman/Docker
+/podman/volumes/
+*.tar.gz
+/podman/*.log
+/podman/containers/
+
+# Editor and IDE
+.idea/
+.vscode/
+*.sublime-*
+*.code-workspace
+
+# Build and Test Artifacts
+/coverage.out     # Go test coverage
+/test-results/    # Test output folders
+*.cov             # Coverage files
+
+# Miscellaneous
+/scripts/tmp/     # Temporary script outputs
+*.pid             # Process ID files
+*.seed            # Random seed files
+*.out             # Generic output files

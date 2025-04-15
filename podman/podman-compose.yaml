@@ -1,0 +1,17 @@
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Containerfile
+    image: nn-backend-image:dev
+    container_name: nn_backend
+    ports:
+      - "8080:8080"
+    environment:
+      - GO_ENV=development
+    networks:
+      - nn_network
+
+networks:
+  nn_network:
+    driver: bridge

@@ -1,75 +1,69 @@
 package neuralnetwork
 
 import (
-	"math/rand"
-
 	"gonum.org/v1/gonum/mat"
 )
 
 type Network struct {
-	inputSize, hiddenSize, outputSize int
-	WeightsHidden, WeightsOutput      *mat.Dense
-	learningRate                      float64
+	Layers       []int        // Integer array where each index represents a layer where the amount of neurons equals the value on index.
+	Weights      []*mat.Dense // Array of matrices where each index represents the weights of a single layer.
+	learningRate float64      // Float64 value representing the learningrate of the neural network.
 }
 
-func NewNetwork(inputSize, hiddenSize, outputSize int, learningRate float64) *Network {
+func NewNetwork(layers []int, learningRate float64) *Network {
 
-	// Initialize network
-	n := &Network{
-		inputSize:    inputSize,
-		hiddenSize:   hiddenSize,
-		outputSize:   outputSize,
+	// Initialize array of matrices equal to the amount of layers minus one.
+	weights := make([]*mat.Dense, len(layers)-1)
+
+	// Loop over all layers minus one.
+	for layerIndex := 0; layerIndex < len(layers)-1; layerIndex++ {
+
+		// Weight dims are calculated with amount of nodes in current layer
+		// and the next layer (layerIndex+1).
+		rows, cols := layers[layerIndex+1], layers[layerIndex]
+		data := make([]float64, rows*cols)
+
+		// Asign random distributed float value to all data values.
+		for j := range data {
+			data[j] = randomArray(float64(layers[0]))
+		}
+
+		// Create the weights matrix for layer.
+		weights[layerIndex] = mat.NewDense(rows, cols, data)
+	}
+
+	// Create the neural network object with layers, generated weigths and learningRate.
+	return &Network{
+		Layers:       layers,
+		Weights:      weights,
 		learningRate: learningRate,
 	}
-
-	// Initialize weights with random values
-	n.WeightsHidden = mat.NewDense(hiddenSize, inputSize, nil)
-	n.WeightsOutput = mat.NewDense(outputSize, hiddenSize, nil)
-
-	// Assign random float64 values to each index in the hidden weights matrix
-	for i := 0; i < hiddenSize*inputSize; i++ {
-		n.WeightsHidden.RawMatrix().Data[i] = rand.NormFloat64()
-	}
-
-	// Assign random float64 values to each index in the output weights matrix
-	for i := 0; i < outputSize*hiddenSize; i++ {
-		n.WeightsOutput.RawMatrix().Data[i] = rand.NormFloat64()
-	}
-
-	return n
 }
 
-func (net *Network) Train(inputData []float64, targetData []float64) {
-	// forward propagation
+func (net *Network) Forward(inputData []float64) (mat.Matrix, []mat.Matrix) {
+
+	// Convert input array into 1dim matrix where all values are put into rows
+	// in single col. Add these as the first layer into the activation array of
+	// layer matrices.
 	inputs := mat.NewDense(len(inputData), 1, inputData)
-	hiddenInputs := Matrix_multiply(net.WeightsHidden, inputs)
-	hiddenOutputs := Apply_fn(Sigmoid, hiddenInputs)
-	finalInputs := Matrix_multiply(net.WeightsOutput, hiddenOutputs)
-	finalOutputs := Apply_fn(Sigmoid, finalInputs)
+	activations := []mat.Matrix{inputs}
 
-	// find errors
-	targets := mat.NewDense(len(targetData), 1, targetData)
-	outputErrors := Subtract(targets, finalOutputs)
-	hiddenErrors := Matrix_multiply(net.WeightsOutput.T(), outputErrors)
+	// Set inputs as the current layer and start interating over layers of weights.
+	current := inputs
+	for _, weights := range net.Weights {
 
-	// backpropagate
-	net.WeightsOutput = Add(net.WeightsOutput,
-		Scale(net.learningRate,
-			Matrix_multiply(Element_multiply(outputErrors, SigmoidPrime(finalOutputs)),
-				hiddenOutputs.T()))).(*mat.Dense)
+		// Calcute the input of the next neuron by multiplying current with weights
+		// of connection between current neuron and next neuron.
+		neuronInput := Matrix_multiply(weights, current)
 
-	net.WeightsHidden = Add(net.WeightsHidden,
-		Scale(net.learningRate,
-			Matrix_multiply(Element_multiply(hiddenErrors, SigmoidPrime(hiddenOutputs)),
-				inputs.T()))).(*mat.Dense)
-}
+		// Apply sigmoid activation function on the calculated inputs of the neuron
+		// and set the neuron as the current neuron.
+		current = Apply_fn(Sigmoid, neuronInput).(*mat.Dense)
 
-func addScalar(i float64, m mat.Matrix) mat.Matrix {
-	rows, cols := m.Dims()
-	a := make([]float64, rows*cols)
-	for x := 0; x < rows*cols; x++ {
-		a[x] = i
+		// Add the activation of this (hidden) neuron activations array of matrices.
+		activations = append(activations, current)
 	}
-	n := mat.NewDense(rows, cols, a)
-	return Add(m, n)
+
+	// Return the output values of the current node and all values of the activated layers.
+	return current, activations
 }

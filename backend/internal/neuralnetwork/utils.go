@@ -4,11 +4,19 @@ import (
 	"math"
 
 	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/stat/distuv"
 )
 
 // Sigmoid activation function
 // Performs a calculation on the inputs of the neuron (weight x input).
-// Returns a new value as input for the next layer.
+//
+// Arguments:
+//   - r: rows, unused
+//   - c: cols, unused
+//   - z: float value to perform activation function on.
+//
+// Returns:
+//   - Returns a new value as input for the next layer.
 func Sigmoid(r, c int, z float64) float64 {
 	return 1.0 / (1 + math.Exp(-1*z))
 }
@@ -16,6 +24,12 @@ func Sigmoid(r, c int, z float64) float64 {
 // Sigmoid derivative function
 // Calculates the gradient of the sigmoid activation for backpropagation.
 // Uses the output of the sigmoid function to compute: sigmoid(x) * (1 - sigmoid(x)).
+//
+// Arguments:
+//   - m: Matrix used to calculate the derivetive of sigmoid.
+//
+// Returns:
+//   - Returns a new matrix with the derivetive values of the input matrix values.
 func SigmoidPrime(m mat.Matrix) mat.Matrix {
 
 	// Get the rows from input and create float64 arraw with size of the rows.
@@ -29,13 +43,20 @@ func SigmoidPrime(m mat.Matrix) mat.Matrix {
 	ones_matrix := mat.NewDense(rows, 1, ones_array)
 
 	// Perform sigmoid(x) * (1 - sigmoid(x)) where input m = hiddenoutputs = sigmoid(x)
-	return Element_multiply(m, Subtract(ones_matrix, m))
+	return Element_multiply(m, Subtract_matrix(ones_matrix, m))
 }
 
 // Matrix multiplication
 // Multiplies matrix m by matrix n.
 // The number of columns in m must equal the number of rows in n.
-// Returns a new matrix with dimensions (rows of m) × (columns of n).
+// Multiplication takes place like m[r, i] x n[i, c]
+//
+// Arguments:
+//   - m: Matrix used to perform elementwise multiplication on.
+//   - n: matrix used to perform elementwise multiplication with.
+//
+// Returns:
+//   - Returns a new matrix with dimensions (rows of m) × (columns of n).
 func Matrix_multiply(m, n mat.Matrix) mat.Matrix {
 
 	// Get rows and cols of first matrix, generate new matrix.
@@ -51,7 +72,13 @@ func Matrix_multiply(m, n mat.Matrix) mat.Matrix {
 // Element multiplication
 // Multiplies each element in m by the corresponding element in n.
 // The rows and columns must be equal in both matrices.
-// Returns a new matrix with dimensions (rows of m) x (cols of m)
+//
+// Arguments:
+//   - m: Matrix used to perform elementwise multiplication on.
+//   - n: matrix used to perform elementwise multiplication with.
+//
+// Returns:
+//   - Returns a new matrix with dimensions (rows of m) x (cols of m)
 func Element_multiply(m, n mat.Matrix) mat.Matrix {
 
 	// Get rows and cols of first matrix, generate new matrix.
@@ -65,7 +92,13 @@ func Element_multiply(m, n mat.Matrix) mat.Matrix {
 
 // Apply function on elements
 // Performs the input function on all elements in the input matrix.
-// Returns a new matrix with values modified by the input function.
+//
+// Arguments:
+//   - fn: function to be applied.
+//   - m: matrix of which all values are to be used in the function fn.
+//
+// Returns:
+//   - Returns a new matrix with values modified by the input function.
 func Apply_fn(fn func(i, j int, v float64) float64, m mat.Matrix) mat.Matrix {
 
 	// Get rows and cols of first matrix, generate new matrix.
@@ -79,8 +112,14 @@ func Apply_fn(fn func(i, j int, v float64) float64, m mat.Matrix) mat.Matrix {
 
 // Multiply with float
 // Perform a multiplication with float s on all elements in input matrix.
-// Returns a new matrix with multiplied values.
-func Scale(s float64, m mat.Matrix) mat.Matrix {
+//
+// Arguments:
+//   - s: float value used for multiplication.
+//   - m: matrix of which all values are to be multiplied with s.
+//
+// Returns:
+//   - Returns a new matrix with multiplied values.
+func Scale_matrix(s float64, m mat.Matrix) mat.Matrix {
 
 	// Get rows and cols of first matrix, generate new matrix.
 	rows, cols := m.Dims()
@@ -94,8 +133,14 @@ func Scale(s float64, m mat.Matrix) mat.Matrix {
 // Element addition
 // Add each element in m with the corresponding element in n.
 // The rows and columns must be equal in both matrices.
-// Returns a new matrix with dimensions (rows of m) x (cols of m)
-func Add(m, n mat.Matrix) mat.Matrix {
+//
+// Arguments:
+//   - m: matrix to which addition takes place.
+//   - n: matrix used for the addition.
+//
+// Returns:
+//   - Returns a new matrix with dimensions (rows of m) x (cols of m)
+func Add_matrix(m, n mat.Matrix) mat.Matrix {
 
 	// Get rows and cols of first matrix, generate new matrix.
 	rows, cols := m.Dims()
@@ -109,8 +154,14 @@ func Add(m, n mat.Matrix) mat.Matrix {
 // Element subtraction
 // Add each element in m by the corresponding element in n.
 // The rows and columns must be equal in both matrices.
-// Returns a new matrix with dimensions (rows of m) x (cols of m)
-func Subtract(m, n mat.Matrix) mat.Matrix {
+//
+// Arguments:
+//   - m: matrix from which subtraction takes place.
+//   - n: matrix used for the subtraction.
+//
+// Returns:
+//   - Returns a new matrix with dimensions (rows of m) x (cols of m)
+func Subtract_matrix(m, n mat.Matrix) mat.Matrix {
 
 	// Get rows and cols of first matrix, generate new matrix.
 	rows, cols := m.Dims()
@@ -119,4 +170,36 @@ func Subtract(m, n mat.Matrix) mat.Matrix {
 	// Perfom subtraction with all corresponding elements in the matrices.
 	output.Sub(m, n)
 	return output
+}
+
+// Generate a random array
+// Creates an array of the specified size filled with random float64 values.
+// Values are uniformly distributed between -1/sqrt(v) and 1/sqrt(v),
+// which helps maintain stable variance during weight initialization.
+//
+// Arguments:
+//   - size: number of elements in the resulting array.
+//   - v: used to determine the scaling factor for the distribution.
+//
+// Returns:
+//   - A slice of float64 with length 'size', containing uniformly distributed values.
+// func randomArray(size int, v float64) (data []float64) {
+// 	dist := distuv.Uniform{
+// 		Min: -1 / math.Sqrt(v),
+// 		Max: 1 / math.Sqrt(v),
+// 	}
+
+// 	data = make([]float64, size)
+// 	for i := 0; i < size; i++ {
+// 		data[i] = dist.Rand()
+// 	}
+// 	return
+// }
+
+func randomArray(v float64) (data float64) {
+	dist := distuv.Uniform{
+		Min: -1 / math.Sqrt(v),
+		Max: 1 / math.Sqrt(v),
+	}
+	return dist.Rand()
 }

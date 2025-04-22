@@ -12,8 +12,16 @@ import (
 
 func main() {
 
+	// ARGS/ENVS
+	INPUT_SIZE := 784
+	HIDDEN_LAYER_SIZES := []int{12, 12, 12, 10}
+	OUTPUT_SIZE := 10
+
+	layers := append([]int{INPUT_SIZE}, HIDDEN_LAYER_SIZES...)
+	layers = append(layers, OUTPUT_SIZE)
+
 	// Create a network for MNIST: 784 inputs, 100 hidden, 10 outputs
-	net := neuralnetwork.NewNetwork([]int{784, 100, 10}, 0.01)
+	net := neuralnetwork.NewNetwork(layers, 0.01)
 
 	// Train the network
 	if err := example.MnistTrain(net); err != nil {

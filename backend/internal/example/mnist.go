@@ -18,16 +18,16 @@ func MnistTrain(net *neuralnetwork.Network) error {
 	// Start timing the evaluation process.
 	t1 := time.Now()
 
+	// Open the MNIST training CSV file for reading.
+	testFile, err := os.Open("C:/Users/bramt/Downloads/mnist_train.csv")
+	if err != nil {
+		return fmt.Errorf("failed to open mnist_train.csv: %w", err)
+	}
+	defer testFile.Close()
+
 	// Train the network for a fixed number of epochs (x iterations over the
 	// dataset).
 	for epochs := 0; epochs < 5; epochs++ {
-
-		// Open the MNIST training CSV file for reading.
-		testFile, err := os.Open("C:/Users/bramt/Downloads/mnist_train.csv")
-		if err != nil {
-			return fmt.Errorf("failed to open mnist_train.csv: %w", err)
-		}
-		defer testFile.Close()
 
 		// Initialize a CSV reader and skip the header row.
 		reader := csv.NewReader(bufio.NewReader(testFile))

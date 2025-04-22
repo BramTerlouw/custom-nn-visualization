@@ -172,31 +172,16 @@ func Subtract_matrix(m, n mat.Matrix) mat.Matrix {
 	return output
 }
 
-// Generate a random array
-// Creates an array of the specified size filled with random float64 values.
+// Creates random float64 values.
 // Values are uniformly distributed between -1/sqrt(v) and 1/sqrt(v),
 // which helps maintain stable variance during weight initialization.
 //
 // Arguments:
-//   - size: number of elements in the resulting array.
 //   - v: used to determine the scaling factor for the distribution.
 //
 // Returns:
-//   - A slice of float64 with length 'size', containing uniformly distributed values.
-// func randomArray(size int, v float64) (data []float64) {
-// 	dist := distuv.Uniform{
-// 		Min: -1 / math.Sqrt(v),
-// 		Max: 1 / math.Sqrt(v),
-// 	}
-
-// 	data = make([]float64, size)
-// 	for i := 0; i < size; i++ {
-// 		data[i] = dist.Rand()
-// 	}
-// 	return
-// }
-
-func randomArray(v float64) (data float64) {
+//   - float64 containing a uniformly distributed value.
+func randomFloat(v float64) (data float64) {
 	dist := distuv.Uniform{
 		Min: -1 / math.Sqrt(v),
 		Max: 1 / math.Sqrt(v),

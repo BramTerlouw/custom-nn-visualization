@@ -25,14 +25,15 @@ func NewNetwork(layers []int, learningRate float64) *Network {
 
 		// Asign random distributed float value to all data values.
 		for j := range data {
-			data[j] = randomArray(float64(layers[0]))
+			data[j] = randomFloat(float64(layers[0]))
 		}
 
 		// Create the weights matrix for layer.
 		weights[layerIndex] = mat.NewDense(rows, cols, data)
 	}
 
-	// Create the neural network object with layers, generated weigths and learningRate.
+	// Create the neural network object with layers, generated weigths and
+	// learningRate.
 	return &Network{
 		Layers:       layers,
 		Weights:      weights,
@@ -64,6 +65,50 @@ func (net *Network) Forward(inputData []float64) (mat.Matrix, []mat.Matrix) {
 		activations = append(activations, current)
 	}
 
-	// Return the output values of the current node and all values of the activated layers.
+	// Return the output values of the current node and all values of the activated
+	// layers.
 	return current, activations
+}
+
+func (net *Network) Train(inputData []float64, targetData []float64) {
+
+	// Execute a forward pass through whole network.
+	outputs, activations := net.Forward(inputData)
+
+	// Convert the validation values into 1dim matrix where all values are put
+	// into rows in single column.
+	targets := mat.NewDense(len(targetData), 1, targetData)
+
+	// Calculate error by subtracting output values (outputs matrix) from forward
+	// pass from the validation values (targets matrix).
+	outputErrors := Subtract_matrix(targets, outputs)
+
+	// Iterate through all the layers and perform backpropagation, starting with the
+	//  weights between the output layer and the last hidden layer.
+	errors := outputErrors
+	for i := len(net.Weights) - 1; i >= 0; i-- {
+
+		// layerInput of current layer is the output of previous node (len(net.Weights)
+		//  - 1). layerOutput is the output of the current layer.
+		layerInput := activations[i]
+		layerOutput := activations[i+1]
+
+		// Calculate the change (delta) of the weights by multiplying each error in the
+		// output matrix with the corresponding derivative (how sensitive to change) of
+		// each output value in the output matrix of current layer.
+		delta := Element_multiply(errors, SigmoidPrime(layerOutput))
+
+		// Calculate the value used to update weights between current layer and current
+		// layer - 1 by multiplying the learning rate * (weight difference * input of
+		// the previous layer).
+		weightUpdate := Scale_matrix(net.learningRate, Matrix_multiply(delta, layerInput.T()))
+
+		// Update the weights with the update value.
+		net.Weights[i] = Add_matrix(net.Weights[i], weightUpdate).(*mat.Dense)
+
+		// Calculate errors previous layer, except for the input layer.
+		if i > 0 {
+			errors = Matrix_multiply(net.Weights[i].T(), delta)
+		}
+	}
 }

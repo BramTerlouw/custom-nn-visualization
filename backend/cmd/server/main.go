@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/example"
-	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/neuralnetwork"
+	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/nnet/network"
 	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/websocket"
 )
 
@@ -42,7 +42,7 @@ func execute_minst_example() {
 	layers = append(layers, OUTPUT_SIZE)
 
 	// Create a network for MNIST: 784 inputs, 100 hidden, 10 outputs
-	net := neuralnetwork.NewNetwork(layers, 0.01)
+	net := network.NewNetwork(layers, 0.01)
 
 	// Train the network
 	if err := example.MnistTrain(net); err != nil {
@@ -68,7 +68,7 @@ func execute_tiny_rand_example() {
 	layers = append(layers, OUTPUT_SIZE)
 
 	// Create a network for MNIST: 784 inputs, 100 hidden, 10 outputs
-	net := neuralnetwork.NewNetwork(layers, 0.01)
+	net := network.NewNetwork(layers, 0.01)
 
 	// Train the network
 	if err := example.TinyRandTrain(net); err != nil {

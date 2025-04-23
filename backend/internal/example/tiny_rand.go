@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/neuralnetwork"
+	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/nnet/network"
 )
 
-func TinyRandTrain(net *neuralnetwork.Network) error {
+func TinyRandTrain(net *network.Network) error {
 
 	// Start timing the evaluation process.
 	t1 := time.Now()

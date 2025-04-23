@@ -1,4 +1,4 @@
-package neuralnetwork
+package network
 
 import (
 	"gonum.org/v1/gonum/mat"

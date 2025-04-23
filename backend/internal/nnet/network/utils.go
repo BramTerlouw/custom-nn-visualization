@@ -1,4 +1,4 @@
-package neuralnetwork
+package network
 
 import (
 	"math"

@@ -9,11 +9,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/neuralnetwork"
+	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/nnet/data"
+	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/nnet/network"
 	"gonum.org/v1/gonum/mat"
 )
 
-func MnistTrain(net *neuralnetwork.Network) error {
+func MnistTrain(net *network.Network) error {
 
 	// Start timing the evaluation process.
 	t1 := time.Now()
@@ -51,7 +52,7 @@ func MnistTrain(net *neuralnetwork.Network) error {
 			}
 
 			// Prepare input for the forward pass.
-			inputs, err := normalizeInput(record, net.Layers[0])
+			inputs, err := data.NormalizeInput(record, net.Layers[0])
 			if err != nil {
 				return fmt.Errorf("failed to normalize data: %w", err)
 			}
@@ -84,7 +85,7 @@ func MnistTrain(net *neuralnetwork.Network) error {
 	return nil
 }
 
-func MnistPredict(net *neuralnetwork.Network) error {
+func MnistPredict(net *network.Network) error {
 
 	// Start timing the evaluation process.
 	t1 := time.Now()
@@ -122,7 +123,7 @@ func MnistPredict(net *neuralnetwork.Network) error {
 		}
 
 		// Prepare input for the forward pass.
-		inputs, err := normalizeInput(record, net.Layers[0])
+		inputs, err := data.NormalizeInput(record, net.Layers[0])
 		if err != nil {
 			return fmt.Errorf("failed to normalize data: %w", err)
 		}
@@ -150,34 +151,7 @@ func MnistPredict(net *neuralnetwork.Network) error {
 	return nil
 }
 
-func normalizeInput(record []string, inputSize int) ([]float64, error) {
-
-	// Check the size of the input record against the expected input size
-	// of the neural network to prevent mismatch.
-	if len(record) < inputSize {
-		return nil, fmt.Errorf("length of record did not match inputsize: expected %d, got %d", inputSize, len(record))
-	}
-
-	// Prepare the input vector (784 pixels) by normalizing pixel
-	// values from [0, 255] to [0.01, 0.99].
-	inputs := make([]float64, inputSize)
-	for i := 1; i < len(record); i++ {
-
-		// Parse the pixel value as a float64.
-		record_value, err := strconv.ParseFloat(record[i], 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse input %d: %w", i, err)
-		}
-
-		// Normalize the pixel value to the range [0.01, 0.99] for
-		// sigmoid compatibility.
-		inputs[i-1] = (record_value / 255.0 * 0.99) + 0.01
-	}
-
-	return inputs, nil
-}
-
-func predict(net *neuralnetwork.Network, inputs []float64) (int, mat.Matrix) {
+func predict(net *network.Network, inputs []float64) (int, mat.Matrix) {
 
 	// Perform forward propagation to get the network's output.
 	outputs, _ := net.Forward(inputs)

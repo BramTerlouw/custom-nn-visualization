@@ -1,9 +1,138 @@
 package data
 
 import (
+	"encoding/csv"
 	"fmt"
+	"math"
+	"os"
 	"strconv"
 )
+
+func Preprocess(file_path string, skip_header_first_row, do_normalize bool, targetIdx, outputSize int) ([][]float64, [][]float64, error) {
+
+	// Read the csv file.
+	data, err := readCSV(file_path, skip_header_first_row, targetIdx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Normalize if necessary.
+	if do_normalize {
+		data, err = normalize(data)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// Generate targat matrix.
+	targets, err := oneHotEncode(data, outputSize)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return data, targets, nil
+}
+
+func readCSV(filepath string, skip_header_first_row bool, targetIdx int) ([][]float64, error) {
+
+	// Check if file can be opened.
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Read the whole csv into memory.
+	reader := csv.NewReader(file)
+	raw, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	// Set starting index (skip one if header exists).
+	startIdx := 0
+	if skip_header_first_row {
+		startIdx = 1
+	}
+
+	// Loop through the records.
+	var data [][]float64
+	for _, data_row := range raw[startIdx:] {
+
+		var row []float64
+
+		// Extract the label value at targetIdx
+		labelVal, err := strconv.ParseFloat(data_row[targetIdx], 64)
+		if err != nil {
+			return nil, err
+		}
+
+		// Put the label at the beginning
+		row = append(row, labelVal)
+
+		// Loop through all entrys in row
+		for idx, data_entry := range data_row {
+
+			// Skip the target column.
+			if idx == targetIdx {
+				continue
+			}
+
+			// Parse to float.
+			val, err := strconv.ParseFloat(data_entry, 64)
+			if err != nil {
+				return nil, err
+			}
+			row = append(row, val)
+		}
+		data = append(data, row)
+	}
+
+	return data, nil
+}
+
+func normalize(data [][]float64) ([][]float64, error) {
+
+	// Loop over every item in the matrix, skipping the label.
+	for rowIdx, row := range data {
+
+		for colIdx := 1; colIdx < len(row); colIdx++ {
+
+			// Normalize and assign
+			entry := row[colIdx]
+			data[rowIdx][colIdx] = (entry / 255.0 * 0.99) + 0.01
+		}
+	}
+	return data, nil
+}
+
+func oneHotEncode(data [][]float64, outputSize int) ([][]float64, error) {
+
+	var target_matrix [][]float64
+
+	// Loop over every row (training entry).
+	for rowIdx, row := range data {
+
+		targets := make([]float64, outputSize)
+		for i := range targets {
+
+			// Assign all entries value 0.01.
+			targets[i] = 0.01
+		}
+
+		// Check if the target (label) is whole number.
+		if math.Mod(row[0], 1.0) != 0 {
+			return nil, fmt.Errorf("target in training row is not a whole number on row %d", rowIdx)
+		}
+
+		// Convert label to its index and set value to 0.99.
+		label := int(row[0])
+		targets[label] = 0.99
+		target_matrix = append(target_matrix, targets)
+	}
+
+	return target_matrix, nil
+}
 
 // Normalize the input
 // Normalizes an array of string values for more efficient

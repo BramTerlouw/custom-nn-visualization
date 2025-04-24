@@ -20,7 +20,7 @@ func MnistTrain(net *network.Network) error {
 	t1 := time.Now()
 
 	// Open the MNIST training CSV file for reading.
-	testFile, err := os.Open("C:/Users/bramt/Downloads/mnist_train.csv")
+	testFile, err := os.Open("file_path_to_train_mnist_dataset")
 	if err != nil {
 		return fmt.Errorf("failed to open mnist_train.csv: %w", err)
 	}

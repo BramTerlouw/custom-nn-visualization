@@ -2,17 +2,14 @@ package example
 
 import (
 	"fmt"
-	"time"
 
+	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/nnet/data"
+	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/nnet/model"
 	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/nnet/network"
 )
 
-func TinyRandTrain(net *network.Network) error {
+func TrainRandMatrix() {
 
-	// Start timing the evaluation process.
-	t1 := time.Now()
-
-	// Define the training data set
 	train_data := [][]float64{
 		{0, 0.40, 0.33, 0.56, 0.66, 0.47},
 		{1, 0.60, 0.77, 0.44, 0.12, 0.97},
@@ -22,34 +19,26 @@ func TinyRandTrain(net *network.Network) error {
 		{5, 0.18, 0.26, 0.18, 0.43, 0.62},
 	}
 
-	// Train the network for a fixed number of epochs (x iterations over the
-	// dataset).
-	for epochs := 0; epochs < 5; epochs++ {
+	// ARGS/ENVS
+	INPUT_SIZE := 5
+	HIDDEN_LAYER_SIZES := []int{10, 20, 10}
+	OUTPUT_SIZE := 6
 
-		// Process each array of float64 input values.
-		for i := range train_data {
+	layers := append([]int{INPUT_SIZE}, HIDDEN_LAYER_SIZES...)
+	layers = append(layers, OUTPUT_SIZE)
 
-			// Prepare the target vector (soft one-hot encoded, 6 outputs).
-			targets := make([]float64, len(train_data))
-			for i := range targets {
-				targets[i] = 0.01
-			}
+	// Create a network for MNIST: 784 inputs, 100 hidden, 10 outputs
+	net := network.NewNetwork(layers, 0.01)
 
-			// Parse the label (0–5) and set the corresponding target to 0.99.
-			label := int(train_data[i][0])
-			targets[label] = 0.99
-
-			/// Perform a training step using the input and target vectors
-			// to update weights.
-			net.Train(train_data[i][1:], targets)
-		}
-
-		// Log the completion of the current epoch.
-		fmt.Printf("Finished epoch: %d", epochs)
+	processed_train, targets_train, err1 := data.Preprocess_Float64_Matrix(train_data, false, net.Layers[len(net.Layers)-1])
+	if err1 != nil {
+		fmt.Print(err1)
 	}
+	fmt.Println("Preprocessing train data completed")
 
-	// Calculate and print the total time taken for training.
-	elapsed := time.Since(t1)
-	fmt.Printf("Time taken to train: %s\n", elapsed)
-	return nil
+	// Train the network
+	err := model.TrainFeedForwardModel(net, processed_train, targets_train, 1)
+	if err != nil {
+		fmt.Print(err)
+	}
 }

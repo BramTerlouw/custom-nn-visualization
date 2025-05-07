@@ -6,10 +6,22 @@ import (
 	"strconv"
 )
 
-func ReadCSV(filepath string, skip_header_first_row bool, targetIdx int) ([][]float64, error) {
+// ReadCSV
+// Read Csv data file into memory, skip label header (if
+// necessary) and set target col as first col.
+//
+// Arguments:
+//   - file_path:				file location to download.
+//   - skip_header_first_row:	bool to skip first record.
+//   - targetIdx:				index of target col.
+//
+// Returns:
+//   - data:					float64 matrix with data.
+//   - err:						(optional).
+func ReadCSV(file_path string, skip_header_first_row bool, targetIdx int) ([][]float64, error) {
 
 	// Check if file can be opened.
-	file, err := os.Open(filepath)
+	file, err := os.Open(file_path)
 	if err != nil {
 		return nil, err
 	}

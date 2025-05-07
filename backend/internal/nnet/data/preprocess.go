@@ -3,10 +3,24 @@ package data
 import (
 	"fmt"
 	"math"
-	"strconv"
 )
 
-func Preprocess_CSV(file_path string, skip_header_first_row, do_normalize bool, targetIdx, outputSize int) ([][]float64, [][]float64, error) {
+// Preprocess_CSV
+// Read Csv data file, normalize if necessary, and
+// create OneHotEncoded targets.
+//
+// Arguments:
+//   - file_path:				file location to download.
+//   - skip_header_first_row:	bool to skip first record.
+//   - normalize:				bool to normalize.
+//   - targetIdx:				index of target col.
+//   - outputSize:				output size of network.
+//
+// Returns:
+//   - data:					float64 matrix with data.
+//   - targets:					float64 array with targets.
+//   - err:						(optional).
+func Preprocess_CSV(file_path string, skip_header_first_row, normalize bool, targetIdx, outputSize int) ([][]float64, [][]float64, error) {
 
 	// Read the csv file.
 	data, err := ReadCSV(file_path, skip_header_first_row, targetIdx)
@@ -15,8 +29,8 @@ func Preprocess_CSV(file_path string, skip_header_first_row, do_normalize bool, 
 	}
 
 	// Normalize if necessary.
-	if do_normalize {
-		data, err = normalize(data)
+	if normalize {
+		data, err = matrix_normalize(data)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -38,7 +52,7 @@ func Preprocess_Float64_Matrix(data [][]float64, do_normalize bool, outputSize i
 
 	// Normalize if necessary.
 	if do_normalize {
-		normalized_data, err := normalize(data)
+		normalized_data, err := matrix_normalize(data)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -54,7 +68,7 @@ func Preprocess_Float64_Matrix(data [][]float64, do_normalize bool, outputSize i
 	return output, targets, nil
 }
 
-func normalize(data [][]float64) ([][]float64, error) {
+func matrix_normalize(data [][]float64) ([][]float64, error) {
 
 	// Loop over every item in the matrix, skipping the label.
 	for rowIdx, row := range data {
@@ -95,39 +109,4 @@ func oneHotEncode(data [][]float64, outputSize int) ([][]float64, error) {
 	}
 
 	return target_matrix, nil
-}
-
-// Normalize the input
-// Normalizes an array of string values for more efficient
-// usage in the neural network.
-//
-// Arguments:
-//   - record: string array to normalize.
-//   - inputSize: number of values the nn expects as input.
-//
-// Returns:
-//   - Returns a tuple with an array with normalized float64 values
-//     and error|nil.
-func NormalizeInput(record []string, inputSize int) ([]float64, error) {
-
-	// Check the size of the input record against the expected input size
-	if len(record) < inputSize {
-		return nil, fmt.Errorf("length of record did not match inputsize: expected %d, got %d", inputSize, len(record))
-	}
-
-	// Normalizing pixel values from [0, 255] to [0.01, 0.99].
-	inputs := make([]float64, inputSize)
-	for i := 1; i < len(record); i++ {
-
-		// Parse the pixel value as a float64.
-		record_value, err := strconv.ParseFloat(record[i], 64)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse input %d: %w", i, err)
-		}
-
-		// Normalize the pixel value to the range [0.01, 0.99].
-		inputs[i-1] = (record_value / 255.0 * 0.99) + 0.01
-	}
-
-	return inputs, nil
 }

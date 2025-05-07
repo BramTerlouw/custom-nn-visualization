@@ -20,11 +20,14 @@ func EvaluateFeedForwardModel(net *network.Network, processed_test [][]float64) 
 
 	var score = 0
 	for i := range len(processed_test) - 1 {
+
+		// Pass test data through trained nn.
 		outputs, _ := net.Forward(processed_test[i][1:])
 
 		bestIdx := 0
 		highest := 0.0
 
+		// Loop over every output value and determine best.
 		for i := range net.Layers[len(net.Layers)-1] {
 			if outputs.At(i, 0) > highest {
 				bestIdx = i
@@ -32,6 +35,7 @@ func EvaluateFeedForwardModel(net *network.Network, processed_test [][]float64) 
 			}
 		}
 
+		// Add right score of index of highest == target.
 		if bestIdx == int(processed_test[i][0]) {
 			score++
 		}

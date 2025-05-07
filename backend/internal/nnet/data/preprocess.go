@@ -45,13 +45,26 @@ func Preprocess_CSV(file_path string, skip_header_first_row, normalize bool, tar
 	return data, targets, nil
 }
 
-func Preprocess_Float64_Matrix(data [][]float64, do_normalize bool, outputSize int) ([][]float64, [][]float64, error) {
+// Preprocess_Float64_Matrix
+// Load data from memory, normalize if necessary, and
+// create OneHotEncoded targets.
+//
+// Arguments:
+//   - data:					data to process.
+//   - normalize:				bool to normalize.
+//   - outputSize:				output size of network.
+//
+// Returns:
+//   - data:					float64 matrix with data.
+//   - targets:					float64 array with targets.
+//   - err:						(optional).
+func Preprocess_Float64_Matrix(data [][]float64, normalize bool, outputSize int) ([][]float64, [][]float64, error) {
 
-	// Define output without any preprocessing.
+	// Define output before any preprocessing.
 	output := data
 
 	// Normalize if necessary.
-	if do_normalize {
+	if normalize {
 		normalized_data, err := matrix_normalize(data)
 		if err != nil {
 			return nil, nil, err
@@ -68,6 +81,16 @@ func Preprocess_Float64_Matrix(data [][]float64, do_normalize bool, outputSize i
 	return output, targets, nil
 }
 
+// matrix_normalize
+// Normalize all valuas of the input matrix,
+// by iterating through it and performing calcs.
+//
+// Arguments:
+//   - data:					data to process.
+//
+// Returns:
+//   - data:					float64 matrix with data.
+//   - err:						(optional).
 func matrix_normalize(data [][]float64) ([][]float64, error) {
 
 	// Loop over every item in the matrix, skipping the label.
@@ -75,7 +98,7 @@ func matrix_normalize(data [][]float64) ([][]float64, error) {
 
 		for colIdx := 1; colIdx < len(row); colIdx++ {
 
-			// Normalize and assign
+			// Normalize and assign.
 			entry := row[colIdx]
 			data[rowIdx][colIdx] = (entry / 255.0 * 0.99) + 0.01
 		}
@@ -83,6 +106,17 @@ func matrix_normalize(data [][]float64) ([][]float64, error) {
 	return data, nil
 }
 
+// oneHotEncode
+// Create an array with targets, representing
+// the correct value, used for training the network.
+//
+// Arguments:
+//   - data:					data to process.
+//   - outputSize:				output size of network.
+//
+// Returns:
+//   - target_matrix:			float64 matrix with targets.
+//   - err:						(optional).
 func oneHotEncode(data [][]float64, outputSize int) ([][]float64, error) {
 
 	var target_matrix [][]float64
@@ -107,6 +141,5 @@ func oneHotEncode(data [][]float64, outputSize int) ([][]float64, error) {
 		targets[label] = 0.99
 		target_matrix = append(target_matrix, targets)
 	}
-
 	return target_matrix, nil
 }

@@ -8,39 +8,55 @@ import (
 	"github.com/BramTerlouw/custom-nn-visualization/backend/internal/nnet/network"
 )
 
-func TrainMnist() {
+// TrainMnist
+// Example usage of the neural network functions.
+// Trains a network on MNIST csv dataset, and tests it
+// with a test MNIST dataset.
+//
+// Arguments:
+//
+//	None
+//
+// Returns:
+//   - err:					(optional).
+func TrainMnist() error {
+	const (
+		inputSize     = 784
+		outputSize    = 10
+		learningRate  = 0.01
+		epochs        = 1
+		trainFilePath = "/Users/bramterlouw/Documents/custom-nn-visualization/mnist_train.csv"
+		testFilePath  = "/Users/bramterlouw/Documents/custom-nn-visualization/mnist_test.csv"
+	)
 
-	// ARGS/ENVS
-	INPUT_SIZE := 784
-	HIDDEN_LAYER_SIZES := []int{100}
-	OUTPUT_SIZE := 10
+	hiddenLayerSizes := []int{100}
+	layers := append([]int{inputSize}, hiddenLayerSizes...)
+	layers = append(layers, outputSize)
 
-	layers := append([]int{INPUT_SIZE}, HIDDEN_LAYER_SIZES...)
-	layers = append(layers, OUTPUT_SIZE)
+	// Initialize neural network
+	net := network.NewNetwork(layers, learningRate)
 
-	// Create a network for MNIST: 784 inputs, 100 hidden, 10 outputs
-	net := network.NewNetwork(layers, 0.01)
-
-	// Preproces train
-	processed_train, targets_train, err1 := data.Preprocess_CSV("/Users/bramterlouw/Documents/custom-nn-visualization/mnist_train.csv", true, true, 0, net.Layers[len(net.Layers)-1])
-	if err1 != nil {
-		fmt.Print(err1)
+	// Preprocess training data
+	trainData, trainTargets, err := data.Preprocess_CSV(trainFilePath, true, true, 0, outputSize)
+	if err != nil {
+		return fmt.Errorf("failed to preprocess training data: %w", err)
 	}
-	fmt.Println("Preprocessing train data completed")
 
-	err2 := model.TrainFeedForwardModel(net, processed_train, targets_train, 1)
-	if err2 != nil {
-		fmt.Print(err2)
+	// Train the model
+	if err := model.TrainFeedForwardModel(net, trainData, trainTargets, epochs); err != nil {
+		return fmt.Errorf("failed to train model: %w", err)
 	}
 
-	processed_test, _, err3 := data.Preprocess_CSV("/Users/bramterlouw/Documents/custom-nn-visualization/mnist_test.csv", true, true, 0, net.Layers[len(net.Layers)-1])
-	if err3 != nil {
-		fmt.Print(err3)
+	// Preprocess test data
+	testData, _, err := data.Preprocess_CSV(testFilePath, true, true, 0, outputSize)
+	if err != nil {
+		return fmt.Errorf("failed to preprocess test dataL %w", err)
 	}
-	fmt.Println("Preprocessing test data completed")
 
-	err4 := model.EvaluateFeedForwardModel(net, processed_test)
-	if err4 != nil {
-		fmt.Print(err4)
+	// Evaluate the model
+	if err := model.EvaluateFeedForwardModel(net, testData); err != nil {
+		return fmt.Errorf("failed to evaluate model: %w", err)
 	}
+
+	return nil
 }
